@@ -119,7 +119,7 @@ def plot_cartpole(name, model:th.ScriptModule,device):
     plt.savefig(f"./figures/{name}/cartpole_RDLA.png")
     print("RDLA...done.")
 
-def plot_vanderpol(name, model: th.ScriptModule, IsSafe=False, IsL2=False ,device=None):
+def plot_vanderpol(name, model: th.ScriptModule, IsSafe=False, IsL2=False, IsShow=False ,device=None):
     plt.rc('text', usetex=True)  # Enable LaTeX rendering
     label_size = 30
     font_size = 40
@@ -127,8 +127,9 @@ def plot_vanderpol(name, model: th.ScriptModule, IsSafe=False, IsL2=False ,devic
     x2_max = 3.0
     dynamics = dyn.VanDerPol()
     if IsL2:
-        N = 200
-        t_list = np.linspace(0,N*dynamics.tau,N+1)
+        N,tau =   1000,0.04
+        
+        t_list = np.linspace(0,N*tau,N+1)
         x = np.array([[0.0,0.0]])
         x_open = np.array([[0.0,0.0]])
         x_list=[x]
@@ -137,24 +138,24 @@ def plot_vanderpol(name, model: th.ScriptModule, IsSafe=False, IsL2=False ,devic
         for i in range(N):
              f, g, alpha, V = model(x_tensor)
              action = alpha.reshape(1, 1).cpu().detach().numpy()
-             x = x + dynamics.tau * (dynamics.state_dot(state=x,action=action+np.sin([i*dynamics.tau])))
-             x_open = x_open + dynamics.tau * (dynamics.state_dot(state=x_open,action=np.sin([i*dynamics.tau])))
+             x = x + tau * (dynamics.state_dot(state=x,action=action+np.sin([1.0000*i*tau])))
+             x_open = x_open + tau * (dynamics.state_dot(state=x_open,action=np.sin([1.0000*i*tau])))
              x_list.append(x)
              x_open_list.append(x_open)
              x_tensor = th.tensor(x.reshape(1,2), dtype=th.float32,device=device,requires_grad=True)
         x_list = np.array(x_list)[:,:,0]
         x_open_list = np.array(x_open_list)[:,:,0]
         fig = plt.figure(figsize=(8, 6))
-        plt.xlim(0,N*dynamics.tau)
+        plt.xlim(0,N*tau)
         plt.ylim(-3.2,3.2)
-        plt.plot(t_list, x_list, label=r"$h_z(t)$ closed-loop", linewidth=4, color="b",
-                  linestyle='-', marker='o',markevery=10, markersize=10)
-        plt.plot(t_list, x_open_list, label=r"$h_z(t)$ open-loop", linewidth=4,color="r",
-                  linestyle='--', marker='s',markevery=10,markersize=10)
-        plt.plot(t_list, np.sin(t_list), label=r"$\sin(t)$", linewidth=4,color="gray",
-                 linestyle='-.', marker='^',markevery=10,markersize=10)
-        plt.xlabel(r"$t$", fontsize=font_size)
-        
+        plt.plot(t_list, x_list, label=r"closed-loop", linewidth=4, color="b",
+                  linestyle='-', marker='o',markevery=100, markersize=10)
+        plt.plot(t_list, x_open_list, label=r"open-loop", linewidth=4,color="r",
+                  linestyle='--', marker='s',markevery=100,markersize=10)
+        plt.plot(t_list, np.sin(1.0000*t_list), label=r"$\sin(t)$", linewidth=4,color="gray",
+                 linestyle='-.', marker='^',markevery=100,markersize=10)
+        plt.xlabel(r"$t$", fontsize=font_size-5)
+        plt.ylabel(r"$z(t)$", fontsize=font_size-5)
         plt.legend(fontsize=font_size-10)
         plt.tick_params(labelsize=label_size)
         plt.grid()
@@ -168,22 +169,25 @@ def plot_vanderpol(name, model: th.ScriptModule, IsSafe=False, IsL2=False ,devic
         for i in range(N):
              f, g, alpha, V = model(x_tensor)
              x_dot = f.reshape(2, 2).cpu().detach().numpy()
-             action = np.hstack(((g@alpha)[0,:].cpu().detach().numpy(),np.zeros((2,1)))).T
-             x = x + dynamics.tau * (np.sin([i*dynamics.tau])+x_dot+action)
+             
+             action = th.hstack((g[0]@(alpha[0]+np.sin(1.0000*i*tau)),
+                                 g[1]*(np.sin(1.0000*i*tau)))).T
+             x = x + tau * (x_dot+action.detach().cpu().numpy())
              x_list.append(x)
              x_tensor = th.tensor(x.reshape(2,2), dtype=th.float32,device=device,requires_grad=True)
         x_clist = np.array(x_list)[:,0,0]
         x_olist = np.array(x_list)[:,1,0]
         fig = plt.figure(figsize=(8, 6))
-        plt.xlim(0,N*dynamics.tau)
+        plt.xlim(0,N*tau)
         plt.ylim(-3.2,3.2)
-        plt.plot(t_list, x_clist, label=r"$h_z(t)$ closed-loop", linewidth=4, color="b",
-                  linestyle='-', marker='o',markevery=10, markersize=10)
-        plt.plot(t_list, x_olist, label=r"$h_z(t)$ open-loop", linewidth=4,color="r",
-                  linestyle='--', marker='s',markevery=10,markersize=10)
-        plt.plot(t_list, np.sin(t_list), label=r"$\sin(t)$", linewidth=4,color="gray",
-                 linestyle='-.', marker='^',markevery=10,markersize=10)
-        plt.xlabel(r"$t$", fontsize=font_size)
+        plt.plot(t_list, x_clist, label=r"closed-loop", linewidth=4, color="b",
+                  linestyle='-', marker='o',markevery=100, markersize=10)
+        plt.plot(t_list, x_olist, label=r"open-loop", linewidth=4,color="r",
+                  linestyle='--', marker='s',markevery=100,markersize=10)
+        plt.plot(t_list, np.sin(1.0000*t_list), label=r"$\sin(t)$", linewidth=4,color="gray",
+                 linestyle='-.', marker='^',markevery=100,markersize=10)
+        plt.xlabel(r"$t$", fontsize=font_size-5)
+        plt.ylabel(r"$z(t)$", fontsize=font_size-5)
         plt.legend(fontsize=font_size-10)
         plt.tick_params(labelsize=label_size)
         plt.grid()
@@ -222,7 +226,7 @@ def plot_vanderpol(name, model: th.ScriptModule, IsSafe=False, IsL2=False ,devic
     ax = fig.add_subplot(111, projection='3d')
 
     surf = ax.plot_surface(x1_tmp, x2_tmp, V.reshape(200, 200).cpu().detach().numpy(), cmap='viridis',alpha=0.8)  
-    surf0 = ax.plot_surface(x1_tmp, x2_tmp, np.zeros((200,200)), color="gray", label="0-plane")
+    surf0 = ax.plot_surface(x1_tmp, x2_tmp, np.zeros((200,200)), color="gray", label="0-plane",alpha = 0.8)
     ax.set_xlabel(r"$x_1$", fontsize=font_size, labelpad =20)
     ax.set_ylabel(r"$x_2$", fontsize=font_size, labelpad =20)
     ax.zaxis.set_rotate_label(False)
@@ -298,6 +302,8 @@ def plot_vanderpol(name, model: th.ScriptModule, IsSafe=False, IsL2=False ,devic
     plt.tight_layout()
     plt.savefig(f"./figures/{name}/vanderpol_RDLA.png")
     print("Real dynamics with control (RDLA)...done.")
+    if IsShow:
+        plt.show()
 
 def plot_benchmark(name, model: th.ScriptModule ,device=None):
     plt.rc('text', usetex=True)  # Enable LaTeX rendering
@@ -310,6 +316,7 @@ def plot_benchmark(name, model: th.ScriptModule ,device=None):
     fig = plt.figure(figsize=(8, 6))
     N,Nx = 80,10
     t_list = np.linspace(0,N*dynamics.tau,N+1)
+
     x = np.random.uniform([0.3,0.3,0.3],[0.6,0.6,0.6],size=(Nx,3))
     energy_list=[np.zeros((Nx))]
     V_list = [np.zeros((Nx))]
@@ -318,7 +325,7 @@ def plot_benchmark(name, model: th.ScriptModule ,device=None):
         f, g, alpha, V, h, beta = model(x_tensor)
         alpha = alpha.flatten().cpu().detach().numpy()
         beta = beta.flatten().cpu().detach().numpy()
-        u_bar = 1
+        u_bar = +1
         u = alpha+beta*u_bar
         x = x + dynamics.tau * (dynamics.state_dot(state=x,action=u.reshape(Nx,1)))
         V_list.append(V.flatten().cpu().detach().numpy())
@@ -362,7 +369,8 @@ def plot_benchmark(name, model: th.ScriptModule ,device=None):
         f, g, alpha, V, h, beta = model(x_tensor)
         alpha = alpha.flatten().cpu().detach().numpy()
         beta = beta.flatten().cpu().detach().numpy()
-        u_bar = -1
+        u_bar = 2*np.sin(100*dynamics.tau*i)
+        
         u = alpha+beta*u_bar
         x = x + dynamics.tau * (dynamics.state_dot(state=x,action=u.reshape(Nx,1)))
         V_list.append(V.flatten().cpu().detach().numpy())
@@ -374,7 +382,7 @@ def plot_benchmark(name, model: th.ScriptModule ,device=None):
     
     #plt.ylim(-1.2,1.2)
     plt.plot(t_list, V_list-energy_list, linewidth=2, color="gray",
-                linestyle='-',alpha = 0.8)
+                linestyle='-',alpha = 0.6)
     
     plt.xlim(0,N*dynamics.tau)
     plt.xlabel(r"$t$", fontsize=font_size-10)
@@ -383,7 +391,7 @@ def plot_benchmark(name, model: th.ScriptModule ,device=None):
     plt.grid()
     
     custom_legend_with_markers = [
-    plt.Line2D([0], [0], color='gray', linestyle='--', linewidth=2, label=r"$\bar u = 0.1\cdot \sin(t)$"),
+    plt.Line2D([0], [0], color='gray', linestyle='-', linewidth=2, label=r"$\bar u = 2\sin(10t)$"),
     plt.Line2D([0], [0], color='blue', linestyle='-.',  linewidth=2, label=r"$\bar u =1$"),
     plt.Line2D([0], [0], color='red', linestyle='--', linewidth=2, label=r"$\bar u =-1$")
     ]
@@ -538,3 +546,79 @@ def plot_pendulum(model:th.ScriptModule):
     plt.tick_params(labelsize=16)
     plt.tight_layout()
     plt.savefig("./figures/pendulum/learned_fb_dynamics.png")
+
+def plot_hjbex(name, model: th.ScriptModule ,device=None):
+    #Set up state space for plotting
+    plt.rc('text', usetex=True)  # Enable LaTeX rendering
+    label_size = 30
+    font_size = 40
+    state = np.linspace(-3, 3, 200).reshape(200,1)
+    
+    state_tensor = th.tensor(state, dtype=th.float32,device=device)
+    state_tensor.requires_grad = True
+
+    # Obtain the dynamics (f) and control term (g, alpha) from the model
+    f, g, alpha, V, H = model(state_tensor)
+    # Plot the open-loop dynamics (without control)
+    state_dot = f[:, 0].cpu().detach().numpy()
+
+    plt.figure(figsize=(8, 8))
+    plt.plot(state, state_dot, label=r"$f(x)$")
+    plt.plot(state, state**2, label =r"$f_{\rm true}(x)$")
+
+    plt.xlabel(r"$x$", fontsize=font_size)
+    plt.xlim([-3,3])
+    plt.ylim([-1,10])
+    plt.grid()
+    plt.legend(fontsize = font_size -20)
+    plt.tick_params(labelsize=label_size)
+    plt.tight_layout()
+    plt.savefig(f"./figures/{name}/hjbex_RDLDNA.png")
+    print("Open-loop dynamics (RDLDNA)...done.")
+
+    alpha = alpha[:, 0].cpu().detach().numpy()
+    plt.figure(figsize=(8, 8))
+
+    plt.plot(state, alpha, label=r"$\alpha(x)$")
+    plt.plot(state, -state*(state+np.sqrt(2+state**2)),label=r"$\alpha_{\rm opt}(x)$")
+    plt.xlabel(r"$x$", fontsize=font_size)
+    plt.xlim([-3,3])
+    plt.ylim([-10,3])
+    plt.grid()
+    plt.legend(fontsize = font_size -20)
+    plt.tick_params(labelsize=label_size)
+    plt.tight_layout()
+    plt.savefig(f"./figures/{name}/hjbex_LA.png")
+    print("Open-loop dynamics (LA)...done.")
+
+    g = g[:, 0].cpu().detach().numpy()
+    plt.figure(figsize=(8, 8))
+
+    plt.plot(state, g, label=r"$g(x)$")
+    plt.plot(state, np.ones_like(state),label=r"$g_{\rm true}(x)$")
+    plt.xlabel(r"$x$", fontsize=font_size)
+    plt.xlim([-3,3])
+    plt.ylim([-10,3])
+    plt.grid()
+    plt.legend(fontsize = font_size -20)
+    plt.tick_params(labelsize=label_size)
+    plt.tight_layout()
+    plt.savefig(f"./figures/{name}/hjbex_Lg.png")
+    print("Open-loop dynamics (Lg)...done.")
+
+    V = V[:, 0].cpu().detach().numpy()
+    
+    plt.figure(figsize=(8, 8))
+    plt.plot(state, V,label=r"$V(x)$")
+    plt.plot(state, 
+             (state**3 + (state**2+2)**(1.5) - 2**(1.5))/3,
+             label=r"$V_{\rm true}(x)$")
+    plt.xlabel(r"$x$", fontsize=font_size)
+    plt.xlim([-3,3])
+    plt.ylim([-1,25])
+    plt.grid()
+    plt.legend(fontsize = font_size -20)
+    plt.tick_params(labelsize=label_size)
+    plt.tight_layout()
+    plt.savefig(f"./figures/{name}/hjbex_RVLV.png")
+    print("Open-loop dynamics (LVNV)...done.")

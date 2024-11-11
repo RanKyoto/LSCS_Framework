@@ -31,6 +31,13 @@ class LyapunovFunction(nn.Module):
         self.x_stable = th.zeros([1,input_dim], dtype=th.float32,device=device)
 
         self.eps = eps
+        for _ in range(100):
+            optimizer = th.optim.Adam(self.parameters(),lr=1e-1)
+            input = th.randn(256,input_dim,dtype=th.float32,device=device)
+            loss = F.mse_loss(input.pow(2).sum(1,keepdim=True),self.forward(input))
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
     def set_equilibium_point(self, x_stable:th.Tensor):
         self.x_stable = x_stable  

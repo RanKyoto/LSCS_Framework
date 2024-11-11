@@ -13,7 +13,7 @@ class Dynamics(nn.Module):
         return None
     
 class VanDerPol(Dynamics):
-    def __init__(self, mu: float = 0.3, tau: float = 0.1) -> None:
+    def __init__(self, mu: float = 0.3, tau: float = 0.02) -> None:
         """
         Initializes the Van der Pol oscillator dynamics.
 
@@ -285,7 +285,7 @@ class Pendulum(Dynamics):
         plt.show()
 
 class BenchmarkExample(Dynamics):
-    def __init__(self, tau: float = 0.0005) -> None:
+    def __init__(self, tau: float = 0.01) -> None:
         """
         Initializes the BenchmarkExample dynamics.
 
@@ -351,10 +351,10 @@ class BenchmarkExample(Dynamics):
             x3 = np.random.uniform(-x_range, x_range, num)
             u = np.random.uniform(-u_range, u_range, num)
         else:
-            x1 = np.linspace(-x_range, x_range, num)
+            x1 = np.linspace(-x_range, x_range, 11)
             x2 = np.linspace(-x_range, x_range, num)
             x3 = np.linspace(-x_range, x_range, num)
-            u = np.linspace(-u_range, u_range, 20)
+            u = np.linspace(-u_range, u_range, 11)
 
         # Create a grid for all combinations of `x1`, `x2`, `x3`, and `u`
         x1, x2, x3, u = np.meshgrid(x1, x2, x3, u)
@@ -464,15 +464,15 @@ class HJI_Example(Dynamics):
         Returns:
             TensorDataset: A dataset with input states and their derivatives.
         """
-        x_range = 3.0
-        u_range = 0.1
+        x_range = 5.0
+        u_range = 3
 
         if isRandom:
             x = np.random.uniform(-x_range, x_range, num)
             u = np.random.uniform(-u_range, u_range, num)
         else:
             x = np.linspace(-x_range, x_range, num)
-            u = np.linspace(-u_range, u_range, 11)
+            u = np.linspace(-u_range, u_range, 201)
 
         x, u = np.meshgrid(x,u)
         state = x.reshape(-1,1)

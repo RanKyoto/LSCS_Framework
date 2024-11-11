@@ -151,6 +151,7 @@ class MLAgent_HJI(MLAgent):
     def __init__(self, name, dynamics, model_class,lambda_h=0.1, model_kwargs = None, batch_size = 256, data_size = 31, lr = 0.01, activation_fn = SmoothReLU, optimizer_class = th.optim.AdamW, optimizer_kwargs = None, device = "auto"):
         super().__init__(name, dynamics, model_class, model_kwargs, batch_size, data_size, lr, activation_fn, optimizer_class, optimizer_kwargs, device)
         self.lambda_h = lambda_h
+        scheduler = th.optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.8)  # 每10个epoch衰减到原来的0.5倍
 
             
 
@@ -176,13 +177,13 @@ class MLAgent_HJI(MLAgent):
                   
                 self.optimizer.zero_grad()
                 loss = nn.functional.mse_loss(f + g @ u, dx) + \
-                       self.lambda_h * nn.functional.mse_loss(H,0*th.ones_like(H,dtype=th.float32,device=self.device))
+                       self.lambda_h * H.pow(2).mean()
                 loss.backward()
                 self.optimizer.step()
                 loss_list.append(loss.item())
             mean_loss =  np.mean(loss_list)
             print(epoch, "ave_loss=", mean_loss)
-            if mean_loss <1e-3:
+            if mean_loss <2e-1:
                 break 
         if isSave:
             return self.save_model()
