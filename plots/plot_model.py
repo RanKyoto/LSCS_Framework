@@ -596,6 +596,7 @@ def plot_hjbex(name, model: th.ScriptModule ,device=None):
 
     plt.plot(state, g, label=r"$g(x)$")
     plt.plot(state, np.ones_like(state),label=r"$g_{\rm true}(x)$")
+    
     plt.xlabel(r"$x$", fontsize=font_size)
     plt.xlim([-3,3])
     plt.ylim([-10,3])
@@ -614,6 +615,7 @@ def plot_hjbex(name, model: th.ScriptModule ,device=None):
              (state**3 + (state**2+2)**(1.5) - 2**(1.5))/3,
              label=r"$V_{\rm true}(x)$")
     plt.xlabel(r"$x$", fontsize=font_size)
+
     plt.xlim([-3,3])
     plt.ylim([-1,25])
     plt.grid()
@@ -621,4 +623,21 @@ def plot_hjbex(name, model: th.ScriptModule ,device=None):
     plt.tick_params(labelsize=label_size)
     plt.tight_layout()
     plt.savefig(f"./figures/{name}/hjbex_RVLV.png")
+    print("Open-loop dynamics (LVNV)...done.")
+
+    plt.figure(figsize=(8, 8))
+
+
+    plt.plot(state, -alpha/g ,label=r"$\nabla V(x)$")
+    plt.plot(state, 
+             (state**2 + state*(state**2+2)**(0.5)),
+             label=r"$\nabla V_{\rm true}(x)$")
+    plt.xlabel(r"$x$", fontsize=font_size)
+    plt.xlim([-3,3])
+    plt.ylim([-5,20])
+    plt.grid()
+    plt.legend(fontsize = font_size -20)
+    plt.tick_params(labelsize=label_size)
+    plt.tight_layout()
+    plt.savefig(f"./figures/{name}/hjbex_RVLVx.png")
     print("Open-loop dynamics (LVNV)...done.")

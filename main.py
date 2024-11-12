@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # #model = agent.load_model()
     # plot_vanderpol(name = "safe_vanderpol", model = model,IsSafe=True, device= agent.device)
 
-    """ Example 3.4 """
+    # """ Example 3.4 """
     # agent = MLAgent(name = "L2_vanderpol",
     #                 dynamics=VanDerPol,
     #                 model_class=L2_Dynamics,
@@ -69,15 +69,15 @@ if __name__ == "__main__":
     # #model = agent.load_model()
     # plot_benchmark(name = "benchmark",model = model,device=agent.device)
     
-    """ Example 3.6 """
+    """ Example 3.9 """
     def q_fnc(x:th.Tensor)->th.Tensor: return x ** 2
     def R_fnc(x:th.Tensor)->th.Tensor: return th.ones_like(x,dtype=th.float32,device=x.device) 
     agent = MLAgent_HJI(name = "HJI_example",
                     dynamics=HJI_Example,
                     model_class=HJI_Dynamics,
-                    model_kwargs={"q_fnc":q_fnc,"R_fnc":R_fnc,"net_arch":[32,32]},
+                    model_kwargs={"q_fnc":q_fnc,"R_fnc":R_fnc,"net_arch":[64,32]},
                     batch_size=512,
-                    data_size=71,
+                    data_size=256,
                     lr=0.01,
                     lambda_h=0.002,
                     device="mps")

@@ -464,7 +464,7 @@ class HJI_Example(Dynamics):
         Returns:
             TensorDataset: A dataset with input states and their derivatives.
         """
-        x_range = 5.0
+        x_range = 3.5
         u_range = 3
 
         if isRandom:
@@ -472,7 +472,7 @@ class HJI_Example(Dynamics):
             u = np.random.uniform(-u_range, u_range, num)
         else:
             x = np.linspace(-x_range, x_range, num)
-            u = np.linspace(-u_range, u_range, 201)
+            u = np.linspace(-u_range, u_range, 11)
 
         x, u = np.meshgrid(x,u)
         state = x.reshape(-1,1)
